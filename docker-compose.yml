@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veloxia_app
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - veloxia_network
+
+  web:
+    image: nginx:alpine
+    container_name: veloxia_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - veloxia_network
+
+  db:
+    image: mysql:8.0
+    container_name: veloxia_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veloxia
+      MYSQL_USER: user
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - veloxia_db_data:/var/lib/mysql
+    networks:
+      - veloxia_network
+
+volumes:
+  veloxia_db_data:
+
+networks:
+  veloxia_network:
+    driver: bridge
